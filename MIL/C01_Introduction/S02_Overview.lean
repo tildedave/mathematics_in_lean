@@ -29,6 +29,9 @@ theorem hard : FermatLastTheorem :=
 
 #check hard
 
+-- example : ∀ m : Nat, Even m → Even (m + 2) := by
+--   rintro m ⟨k, hk⟩
+
 -- Here are some proofs.
 example : ∀ m n : Nat, Even n → Even (m * n) := fun m n ⟨k, (hk : n = k + k)⟩ ↦
   have hmn : m * n = m * k + m * k := by rw [hk, mul_add]
@@ -52,4 +55,3 @@ example : ∀ m n : Nat, Even n → Even (m * n) := by
 
 example : ∀ m n : Nat, Even n → Even (m * n) := by
   intros; simp [*, parity_simps]
-

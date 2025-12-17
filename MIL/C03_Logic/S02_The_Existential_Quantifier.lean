@@ -51,11 +51,25 @@ example (ubf : FnHasUb f) (ubg : FnHasUb g) : FnHasUb fun x ↦ f x + g x := by
   use a + b
   apply fnUb_add ubfa ubgb
 
+theorem fnLb_add {f g : ℝ → ℝ} {a b : ℝ} (lfa: FnLb f a) (lgb : FnLb g b) :
+  FnLb (fun x ↦ f x + g x) (a + b) :=
+  fun x ↦ add_le_add (lfa x) (lgb x)
+
 example (lbf : FnHasLb f) (lbg : FnHasLb g) : FnHasLb fun x ↦ f x + g x := by
-  sorry
+  rcases lbf with ⟨a, lbfa⟩
+  rcases lbg with ⟨b, lbgb⟩
+  use a + b
+  apply fnLb_add lbfa lbgb
+
+theorem fnUb_mul {f : ℝ → ℝ} {a c: ℝ} (h : c ≥ 0) (lfa: FnUb f a) :
+  FnUb (fun x ↦ c * f x) (c * a) := by
+  intro x
+  exact mul_le_mul_of_nonneg_left (lfa x) h
 
 example {c : ℝ} (ubf : FnHasUb f) (h : c ≥ 0) : FnHasUb fun x ↦ c * f x := by
-  sorry
+  rcases ubf with ⟨a, ubfa⟩
+  use c * a
+  apply fnUb_mul h ubfa
 
 example : FnHasUb f → FnHasUb g → FnHasUb fun x ↦ f x + g x := by
   rintro ⟨a, ubfa⟩ ⟨b, ubgb⟩
@@ -123,14 +137,14 @@ section
 variable {a b c : ℕ}
 
 example (divab : a ∣ b) (divbc : b ∣ c) : a ∣ c := by
-  rcases divab with ⟨d, beq⟩
-  rcases divbc with ⟨e, ceq⟩
-  rw [ceq, beq]
+  rcases divab with ⟨d, _, rfl⟩
+  rcases divbc with ⟨e, _, rfl⟩
   use d * e; ring
 
 example (divab : a ∣ b) (divac : a ∣ c) : a ∣ b + c := by
-  sorry
-
+  rcases divab with ⟨d, _, rfl⟩
+  rcases divac with ⟨e, _, rfl⟩
+  use (d + e); ring
 end
 
 section
