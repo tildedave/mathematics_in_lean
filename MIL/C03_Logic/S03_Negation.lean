@@ -32,11 +32,18 @@ example (h : ∀ a, ∃ x, f x > a) : ¬FnHasUb f := by
   have : f x ≤ a := fnuba x
   linarith
 
-example (h : ∀ a, ∃ x, f x < a) : ¬FnHasLb f :=
-  sorry
+example (h : ∀ a, ∃ x, f x < a) : ¬FnHasLb f := by
+  intro fnlb
+  rcases fnlb with ⟨a, fnlba⟩
+  rcases (h a) with ⟨x, hx⟩
+  have : a ≤ f x := fnlba x
+  linarith
 
-example : ¬FnHasUb fun x ↦ x :=
-  sorry
+example : ¬FnHasUb fun x ↦ x := by
+  intro h
+  rcases h with ⟨c, fnuba⟩
+  have : (c + 1) ≤ c := (fnuba (c + 1))
+  linarith
 
 #check (not_le_of_gt : a > b → ¬a ≤ b)
 #check (not_lt_of_ge : a ≥ b → ¬a < b)
@@ -44,37 +51,59 @@ example : ¬FnHasUb fun x ↦ x :=
 #check (le_of_not_gt : ¬a > b → a ≤ b)
 
 example (h : Monotone f) (h' : f a < f b) : a < b := by
-  sorry
+  apply lt_of_not_ge
+  intro blta
+  have : f b ≤ f a := (h blta)
+  linarith
 
 example (h : a ≤ b) (h' : f b < f a) : ¬Monotone f := by
-  sorry
+  intro fmonotone
+  have : f a ≤ f b := fmonotone h
+  linarith
 
 example : ¬∀ {f : ℝ → ℝ}, Monotone f → ∀ {a b}, f a ≤ f b → a ≤ b := by
   intro h
   let f := fun x : ℝ ↦ (0 : ℝ)
-  have monof : Monotone f := by sorry
-  have h' : f 1 ≤ f 0 := le_refl _
-  sorry
+  have monof : Monotone f := by
+    intro a b _
+    change 0 ≤ 0
+    exact le_refl 0
+  have : f 1 ≤ f 0 := le_refl _
+  -- having to cast 1 to real makes sense, kind of annoying to miss this
+  have : (1 : ℝ) ≤ 0 := h monof this
+  linarith
 
 example (x : ℝ) (h : ∀ ε > 0, x < ε) : x ≤ 0 := by
-  sorry
-
+  apply le_of_not_gt
+  intro x_pos
+  -- have : x / 2 > 0 := by linarith
+  -- have : x < x / 2 := h (x / 2) this
+  linarith [h _ x_pos]
 end
 
 section
 variable {α : Type*} (P : α → Prop) (Q : Prop)
 
 example (h : ¬∃ x, P x) : ∀ x, ¬P x := by
-  sorry
+  intro x px
+  exact (h ⟨x, px⟩)
 
 example (h : ∀ x, ¬P x) : ¬∃ x, P x := by
-  sorry
+  intro ⟨x, px⟩
+  exact h x px
 
 example (h : ¬∀ x, P x) : ∃ x, ¬P x := by
-  sorry
+  by_contra h'
+  apply h
+  intro x
+  by_contra h''
+  exact h' ⟨x, h''⟩
 
 example (h : ∃ x, ¬P x) : ¬∀ x, P x := by
-  sorry
+  intro all_x
+  rcases h with ⟨x, px⟩
+  apply px
+  exact (all_x x)
 
 example (h : ¬∀ x, P x) : ∃ x, ¬P x := by
   by_contra h'
@@ -85,18 +114,21 @@ example (h : ¬∀ x, P x) : ∃ x, ¬P x := by
   exact h' ⟨x, h''⟩
 
 example (h : ¬¬Q) : Q := by
-  sorry
+  by_contra h'
+  exact (h h')
 
 example (h : Q) : ¬¬Q := by
-  sorry
-
+  intro h'
+  exact (h' h)
 end
 
 section
 variable (f : ℝ → ℝ)
 
 example (h : ¬FnHasUb f) : ∀ a, ∃ x, f x > a := by
-  sorry
+  dsimp only [FnHasUb, FnUb] at h
+  push_neg at h
+  exact h
 
 example (h : ¬∀ a, ∃ x, f x > a) : FnHasUb f := by
   push_neg at h
@@ -136,4 +168,3 @@ example (h : 0 < 0) : a > 37 := by
   contradiction
 
 end
-
